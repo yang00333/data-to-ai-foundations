@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data-to-AI Foundations</title>
+<meta name="description" content="An open reference implementation of a reusable data foundation for AI applications: the parts that repeat are written once, the parts that differ are configuration.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site">
+  <div class="wrap bar">
+    <a class="mark" href="./">Data-to-AI Foundations</a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#run">Run it</a>
+      <a href="#writing">Writing</a>
+      <a href="https://github.com/yang00333/data-to-ai-foundations">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero wrap">
+    <h1>Most AI projects stall on the data, not the model.</h1>
+    <p class="lede">Data-to-AI Foundations is an open reference implementation of the layer in between: it reads operational data as it really arrives, holds back what a model should never see, and delivers one clean table. The parts that repeat are written once; the parts that differ are configuration.</p>
+    <p class="actions">
+      <a class="button primary" href="https://github.com/yang00333/data-to-ai-foundations">View the code on GitHub</a>
+      <a class="button" href="#how">See how it works</a>
+    </p>
+  </section>
+
+  <section class="specimen wrap" aria-label="Example: raw sensor data and the table the model receives">
+    <div class="panel raw">
+      <h2>What the pond sensors send</h2>
+      <pre><code><span class="file">do_sensor.csv</span>
+2026-06-01T01:48:00,P1,4.776
+2026-06-01T01:49:00,P1,5.047
+<span class="fault">2026-06-01T01:50:00,P1,45.0</span>
+2026-06-01T01:51:00,P1,4.832
+
+<span class="file">water_temp.csv</span>
+<span class="fault">06/01/2026 00:00,P1,77.2</span>
+
+<span class="file">do_sensor.csv</span>
+2026-06-02T05:59:00,P1,5.521
+<span class="fault">2026-06-02T07:30:00,P1,6.148</span></code></pre>
+      <ol class="notes">
+        <li><span class="tag">1</span>45 mg/L of dissolved oxygen is physically impossible: a sensor fault.</li>
+        <li><span class="tag">2</span>The temperature probe reports Fahrenheit, in a different date format.</li>
+        <li><span class="tag">3</span>Ninety minutes of oxygen readings never arrived.</li>
+      </ol>
+    </div>
+    <div class="panel clean">
+      <h2>What the forecasting model receives</h2>
+      <div class="scroll" tabindex="0" role="region" aria-label="AI-ready table excerpt">
+        <table>
+          <thead>
+            <tr><th scope="col">15-minute step</th><th scope="col">O₂ mg/L</th><th scope="col">pH</th><th scope="col">Water °C</th><th scope="col">Air °C</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Jun 1, 01:45</td><td>4.88</td><td>7.65</td><td>24.6</td><td>25.7</td></tr>
+            <tr><td>Jun 1, 02:00</td><td>4.93</td><td>7.62</td><td>24.5</td><td>24.8</td></tr>
+            <tr class="more"><td colspan="5">104 more rows</td></tr>
+            <tr><td>Jun 2, 05:45</td><td>5.35</td><td>7.73</td><td>24.4</td><td>26.7</td></tr>
+            <tr class="held"><td>Jun 2, 06:00 to 07:15</td><td colspan="4">6 rows held back: no oxygen reading</td></tr>
+            <tr><td>Jun 2, 07:30</td><td>6.32</td><td>7.83</td><td>25.0</td><td>28.4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="notes">
+        <li><span class="tag">1</span>The fault is quarantined at the source, before it can distort the 15-minute average.</li>
+        <li><span class="tag">2</span>Fahrenheit is converted by a one-line rule in the configuration.</li>
+        <li><span class="tag">3</span>The outage is reported and held back, not filled with invented values.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="prose wrap" id="problem">
+    <h2>The layer every AI project rebuilds</h2>
+    <p>An organization with sensors, test equipment, or business systems usually has the data an AI application needs. What it lacks is a dependable path from those systems to the model: readings on different schedules and in different units, gaps, faults, duplicates, and no record of what was thrown away or why.</p>
+    <p>That path tends to be built inside each project and shaped around that project's data, so little of it carries over to the next. This project separates what repeats from what changes, and shows the result working in two very different settings.</p>
+  </section>
+
+  <section class="how wrap" id="how">
+    <h2>One sequence for every domain</h2>
+    <p class="intro">Every pipeline runs the same steps, in the same order. The code for these steps is shared.</p>
+    <ol class="sequence">
+      <li><strong>Read</strong><span>CSV connectors, time parsing, column mapping</span></li>
+      <li><strong>De-duplicate</strong><span>repeated records set aside with a reason</span></li>
+      <li><strong>Check sources</strong><span>impossible values stopped at the door</span></li>
+      <li><strong>Align</strong><span>one grid per entity, short gaps filled only where allowed</span></li>
+      <li><strong>Join and derive</strong><span>lookup tables, unit conversions, computed fields</span></li>
+      <li><strong>Check output</strong><span>what may reach the model, and what may not</span></li>
+      <li><strong>Deliver and report</strong><span>AI-ready table, quarantine, run report</span></li>
+    </ol>
+
+    <h3>What changes is a configuration file</h3>
+    <div class="domains">
+      <figure>
+        <figcaption><strong>Aquaculture</strong> One row per pond per 15 minutes, for dissolved-oxygen forecasting and risk alerts.</figcaption>
+<pre><code>[[sources.checks]]
+name = "do_physically_possible"
+type = "range"
+column = "do_mg_l"
+min = 0
+max = 20
+
+derive = { water_temp_c = "(water_temp_f - 32) * 5 / 9" }
+
+[[align.fields]]
+source = "ph"
+column = "ph"
+fill = "ffill"
+fill_limit = 2   # carry pH up to 30 minutes</code></pre>
+      </figure>
+      <figure>
+        <figcaption><strong>Semiconductor testing</strong> One row per product per day, for tester-capacity and material-shortage forecasting.</figcaption>
+<pre><code>[[sources.checks]]
+name = "inventory_not_negative"
+type = "range"
+column = "units_on_hand"
+min = 0
+
+[derive]
+tester_hours_needed = "planned_lots * test_hours_per_lot"
+capacity_gap_hours = "tester_hours - tester_hours_needed"
+
+[[output_checks]]
+name = "known_product"
+type = "allowed_values"</code></pre>
+      </figure>
+    </div>
+
+    <dl class="reuse">
+      <div><dt>Shared pipeline code</dt><dd>505 lines</dd></div>
+      <div><dt>Aquaculture configuration</dt><dd>117 lines</dd></div>
+      <div><dt>Semiconductor configuration</dt><dd>89 lines</dd></div>
+      <div><dt>New code for the second domain</dt><dd>0 lines</dd></div>
+    </dl>
+    <p class="small">Counts for the two synthetic examples in the repository, from <code>scripts/reuse_report.py</code>. They describe this code, not effort on any real project.</p>
+  </section>
+
+  <section class="report wrap" id="report">
+    <div>
+      <h2>Every run explains itself</h2>
+      <p>Each run writes a report alongside the table: how many rows each source sent, how many were held back and for what reason, how fresh the result is, and whether the run passed. When a forecast looks wrong, the first question is whether the data were, and the report answers it.</p>
+    </div>
+<pre class="json"><code>"dissolved_oxygen": {
+  "rows_read": 2791,
+  "rows_passed": 2784,
+  "rows_quarantined": 7,
+  "by_reason": {
+    "do_physically_possible": 6,
+    "duplicate:ts,pond_id": 1
+  }
+},
+"table_checks": [
+  { "check": "freshness", "passed": true,
+    "detail": "latest 2026-06-02T23:45, age 0:25:00" }
+]</code></pre>
+  </section>
+
+  <section class="run wrap" id="run">
+    <h2>Run it</h2>
+    <p>Python 3.11 or later. Nothing to install: the core uses only the standard library, so the patterns are easy to read and adapt.</p>
+<pre><code>git clone https://github.com/yang00333/data-to-ai-foundations.git
+cd data-to-ai-foundations
+PYTHONPATH=src python -m d2ai run configs/aquaculture.toml
+PYTHONPATH=src python -m d2ai run configs/semiconductor_test.toml
+python -m unittest discover -s tests</code></pre>
+    <p>To add a domain, copy a configuration, describe your sources and rules, and run it. If a rule cannot be expressed, that is the signal the shared core needs a new capability.</p>
+  </section>
+
+  <section class="next wrap" id="next">
+    <h2>Planned next</h2>
+    <ul>
+      <li>Database and API connectors alongside CSV</li>
+      <li>Schema-change detection that flags a renamed or retyped field before it reaches a model</li>
+      <li>A third example domain, added the same way, to test the core again</li>
+      <li>Write-ups on what each reuse test shows, including where reuse does not save effort</li>
+    </ul>
+  </section>
+
+  <section class="writing wrap" id="writing">
+    <h2>Writing</h2>
+    <ul class="papers">
+      <li>
+        <cite>SyntheClean: Enhancing Large-Scale Multimodal Models via Adaptive Data Synthesis and Cleaning</cite>
+        <span>Yang Chen et al. 2025 5th International Conference on Artificial Intelligence and Industrial Technology Applications (AIITA 2025), IEEE.</span>
+        <a href="https://doi.org/10.1109/AIITA65135.2025.11047850">doi:10.1109/AIITA65135.2025.11047850</a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="about wrap" id="about">
+    <h2>About</h2>
+    <p>Data-to-AI Foundations is maintained by Yang Chen, a data and AI infrastructure engineer. I have built this layer in semiconductor testing, commercial data products delivered to customers' own data warehouses, and agricultural sensor data feeding production AI. This project collects the parts that kept repeating, in a form anyone can read and run.</p>
+    <p>Questions, ideas, or a domain you would like to see: <a href="https://github.com/yang00333/data-to-ai-foundations/issues">open an issue on GitHub</a>.</p>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p>All data in the project are synthetic; nothing comes from any employer, client, or customer. Code under the MIT License. <a href="https://github.com/yang00333/data-to-ai-foundations">Source on GitHub</a>.</p>
+  </div>
+</footer>
+</body>
+</html>
