@@ -1,0 +1,19 @@
+[project]
+name = "d2ai-foundations"
+version = "0.1.0"
+description = "A dependency-free reference implementation of a reusable data foundation for AI applications"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Yang Chen" }]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+d2ai = "d2ai.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

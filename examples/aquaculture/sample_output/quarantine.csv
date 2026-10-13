@@ -1,0 +1,23 @@
+_stage,_source,_reason,pond_id,do_mg_l,ts,ph,reading_time,pond,temp_f,_line,feed_kg,do_min_mg_l,water_temp_c,air_temp_c,rain_mm
+source,dissolved_oxygen,"duplicate:ts,pond_id",P1,6.7,2026-06-01T08:19:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-01T01:50:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-01T22:18:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-02T03:40:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-02T10:41:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-02T19:07:00,,,,,,,,,,
+source,dissolved_oxygen,do_physically_possible,P1,45.0,2026-06-02T21:48:00,,,,,,,,,,
+source,ph,ph_physically_possible,P1,,2026-06-01T08:20:00,14.6,,,,,,,,,
+parse,water_temperature,unparseable time,,,,,not recorded,P1,76.52,44,,,,,
+source,feeding,"duplicate:ts,pond_id",P1,,2026-06-01T17:16:00,,,,,,14.0,,,,
+output,aligned,not_null:ph,P1,8.8003,2026-06-01T12:30:00,,,,,,0.0,8.556,27.1222,32.3,0.0
+output,aligned,not_null:ph,P1,8.8849,2026-06-01T12:45:00,,,,,,0.0,8.55,27.0611,32.3,0.0
+output,aligned,not_null:ph,P1,8.9837,2026-06-01T13:00:00,,,,,,0.0,8.811,27.2278,33.0,0.0
+output,aligned,not_null:ph,P1,9.0016,2026-06-01T13:15:00,,,,,,0.0,8.757,27.4611,33.0,0.0
+output,aligned,not_null:ph,P1,9.098,2026-06-01T13:30:00,,,,,,0.0,8.76,27.4028,33.0,0.0
+output,aligned,not_null:ph,P1,9.0513,2026-06-01T13:45:00,,,,,,0.0,8.805,27.4556,33.0,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T06:00:00,7.669,,,,,12.5,,24.4778,27.2,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T06:15:00,7.756,,,,,0.0,,24.3444,27.2,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T06:30:00,7.733,,,,,0.0,,24.7889,27.2,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T06:45:00,7.775,,,,,0.0,,24.7389,27.2,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T07:00:00,7.791,,,,,0.0,,24.6722,28.4,0.0
+output,aligned,not_null:do_mg_l,P1,,2026-06-02T07:15:00,7.814,,,,,0.0,,24.6833,28.4,0.0

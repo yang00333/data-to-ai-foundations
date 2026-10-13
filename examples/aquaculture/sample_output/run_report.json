@@ -1,0 +1,97 @@
+{
+  "pipeline": "aquaculture-water-quality",
+  "domain": "aquaculture",
+  "status": "success",
+  "as_of": "2026-06-03T00:10:00",
+  "sources": {
+    "dissolved_oxygen": {
+      "rows_read": 2791,
+      "rows_passed": 2784,
+      "rows_quarantined": 7,
+      "by_reason": {
+        "do_physically_possible": 6,
+        "duplicate:ts,pond_id": 1
+      }
+    },
+    "ph": {
+      "rows_read": 552,
+      "rows_passed": 551,
+      "rows_quarantined": 1,
+      "by_reason": {
+        "ph_physically_possible": 1
+      }
+    },
+    "water_temperature": {
+      "rows_read": 288,
+      "rows_passed": 287,
+      "rows_quarantined": 1,
+      "by_reason": {
+        "unparseable time": 1
+      }
+    },
+    "weather": {
+      "rows_read": 48,
+      "rows_passed": 48,
+      "rows_quarantined": 0,
+      "by_reason": {}
+    },
+    "feeding": {
+      "rows_read": 7,
+      "rows_passed": 6,
+      "rows_quarantined": 1,
+      "by_reason": {
+        "duplicate:ts,pond_id": 1
+      }
+    }
+  },
+  "output": {
+    "rows_aligned": 192,
+    "rows_delivered": 180,
+    "rows_quarantined": 12,
+    "by_reason": {
+      "not_null:do_mg_l": 6,
+      "not_null:ph": 6
+    },
+    "time_range": [
+      "2026-06-01T00:00:00",
+      "2026-06-02T23:45:00"
+    ],
+    "columns": [
+      "ts",
+      "pond_id",
+      "do_mg_l",
+      "do_min_mg_l",
+      "ph",
+      "water_temp_c",
+      "air_temp_c",
+      "rain_mm",
+      "feed_kg"
+    ]
+  },
+  "table_checks": [
+    {
+      "check": "freshness",
+      "passed": true,
+      "severity": "fail",
+      "detail": "latest 2026-06-02T23:45:00, age 0:25:00 (maximum 0:30:00)"
+    },
+    {
+      "check": "row_count",
+      "passed": true,
+      "severity": "fail",
+      "detail": "180 rows (minimum 150)"
+    },
+    {
+      "check": "max_quarantine_share",
+      "passed": true,
+      "severity": "fail",
+      "detail": "6.2% of aligned rows quarantined (maximum 10%)"
+    }
+  ],
+  "timings_seconds": {
+    "read_and_check_sources": 0.0208,
+    "align": 0.0138,
+    "output_checks": 0.0005,
+    "total": 0.0352
+  }
+}

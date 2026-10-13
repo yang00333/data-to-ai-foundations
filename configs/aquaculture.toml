@@ -1,0 +1,140 @@
+# Aquaculture: water-quality data for dissolved-oxygen forecasting and risk alerts.
+# Everything below is a domain rule. The pipeline code is shared with every other domain.
+
+[pipeline]
+name = "aquaculture-water-quality"
+domain = "aquaculture"
+description = "One row per pond per 15 minutes, ready for a dissolved-oxygen forecasting model."
+as_of = "2026-06-03T00:10:00"   # reference time for the freshness check (synthetic data)
+
+[[sources]]
+name = "dissolved_oxygen"
+path = "../examples/aquaculture/data/do_sensor.csv"
+time_column = "timestamp"
+columns = { pond_id = "pond_id", do_mg_l = "do_mg_l" }
+numeric = ["do_mg_l"]
+dedupe_on = ["ts", "pond_id"]
+  [[sources.checks]]
+  name = "do_physically_possible"
+  type = "range"
+  column = "do_mg_l"
+  min = 0
+  max = 20
+
+[[sources]]
+name = "ph"
+path = "../examples/aquaculture/data/ph_sensor.csv"
+time_column = "timestamp"
+columns = { pond_id = "pond_id", ph = "ph" }
+numeric = ["ph"]
+  [[sources.checks]]
+  name = "ph_physically_possible"
+  type = "range"
+  column = "ph"
+  min = 4
+  max = 11
+
+[[sources]]
+name = "water_temperature"
+path = "../examples/aquaculture/data/water_temp.csv"
+time_column = "reading_time"
+time_format = "%m/%d/%Y %H:%M"
+columns = { pond = "pond_id", temp_f = "water_temp_f" }
+numeric = ["water_temp_f"]
+derive = { water_temp_c = "(water_temp_f - 32) * 5 / 9" }   # probe reports Fahrenheit
+  [[sources.checks]]
+  name = "water_temp_plausible"
+  type = "range"
+  column = "water_temp_c"
+  min = 0
+  max = 40
+
+[[sources]]
+name = "weather"            # farm-wide: no pond column, so it applies to every pond
+path = "../examples/aquaculture/data/weather.csv"
+time_column = "timestamp"
+columns = { air_temp_c = "air_temp_c", rain_mm = "rain_mm" }
+numeric = ["air_temp_c", "rain_mm"]
+
+[[sources]]
+name = "feeding"
+path = "../examples/aquaculture/data/feeding_log.csv"
+time_column = "fed_at"
+columns = { pond_id = "pond_id", feed_kg = "feed_kg" }
+numeric = ["feed_kg"]
+dedupe_on = ["ts", "pond_id"]
+
+[align]
+freq = "15min"
+keys = ["pond_id"]
+
+  [[align.fields]]
+  source = "dissolved_oxygen"
+  column = "do_mg_l"
+  agg = "mean"
+
+  [[align.fields]]
+  source = "dissolved_oxygen"
+  column = "do_mg_l"
+  agg = "min"
+  as = "do_min_mg_l"
+
+  [[align.fields]]
+  source = "ph"
+  column = "ph"
+  agg = "last"
+  fill = "ffill"
+  fill_limit = 2            # pH changes slowly: carry a reading up to 30 minutes
+
+  [[align.fields]]
+  source = "water_temperature"
+  column = "water_temp_c"
+  agg = "mean"
+  fill = "ffill"
+  fill_limit = 1
+
+  [[align.fields]]
+  source = "weather"
+  column = "air_temp_c"
+  agg = "last"
+  fill = "ffill"
+  fill_limit = 3            # hourly weather covers the following 45 minutes
+
+  [[align.fields]]
+  source = "weather"
+  column = "rain_mm"
+  agg = "sum"
+  fill = "zero"
+
+  [[align.fields]]
+  source = "feeding"
+  column = "feed_kg"
+  agg = "sum"
+  fill = "zero"             # no feeding record means no feeding
+
+[[output_checks]]
+type = "not_null"
+column = "do_mg_l"
+
+[[output_checks]]
+type = "not_null"
+column = "ph"
+
+[[output_checks]]
+type = "not_null"
+column = "water_temp_c"
+
+[[output_checks]]
+type = "not_null"
+column = "air_temp_c"
+
+[[table_checks]]
+type = "freshness"
+max_age = "30min"
+
+[[table_checks]]
+type = "row_count"
+min = 150
+
+[output]
+max_quarantine_share = 0.10

@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run unit and end-to-end tests
+        run: python -m unittest discover -s tests -v
+      - name: Run both example pipelines
+        run: |
+          PYTHONPATH=src python -m d2ai run configs/aquaculture.toml
+          PYTHONPATH=src python -m d2ai run configs/semiconductor_test.toml

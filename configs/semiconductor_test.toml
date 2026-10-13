@@ -1,0 +1,109 @@
+# Semiconductor testing: daily planning data for tester-capacity and material forecasting.
+# Same pipeline code as aquaculture; only these domain rules differ.
+
+[pipeline]
+name = "semiconductor-test-planning"
+domain = "semiconductor testing"
+description = "One row per product per day, ready for capacity and material-shortage forecasting."
+as_of = "2026-05-31T06:00:00"
+
+[[sources]]
+name = "inventory"
+path = "../examples/semiconductor_test/data/inventory.csv"
+time_column = "snapshot_date"
+columns = { product_id = "product_id", units_on_hand = "units_on_hand" }
+numeric = ["units_on_hand"]
+  [[sources.checks]]
+  name = "inventory_not_negative"
+  type = "range"
+  column = "units_on_hand"
+  min = 0
+
+[[sources]]
+name = "test_plan"
+path = "../examples/semiconductor_test/data/test_plan.csv"
+time_column = "plan_date"
+columns = { product_id = "product_id", planned_lots = "planned_lots" }
+numeric = ["planned_lots"]
+dedupe_on = ["ts", "product_id"]
+  [[sources.checks]]
+  name = "lots_not_negative"
+  type = "range"
+  column = "planned_lots"
+  min = 0
+
+[[sources]]
+name = "tester_capacity"
+path = "../examples/semiconductor_test/data/tester_capacity.csv"
+time_column = "date"
+columns = { product_id = "product_id", tester_hours = "tester_hours" }
+numeric = ["tester_hours"]
+
+[[sources]]
+name = "product_master"
+path = "../examples/semiconductor_test/data/product_master.csv"
+static = true
+columns = { product_id = "product_id", test_hours_per_lot = "test_hours_per_lot", units_per_lot = "units_per_lot" }
+numeric = ["test_hours_per_lot", "units_per_lot"]
+
+[align]
+freq = "1d"
+keys = ["product_id"]
+
+  [[align.fields]]
+  source = "inventory"
+  column = "units_on_hand"
+  agg = "last"
+  fill = "ffill"
+  fill_limit = 1            # a snapshot may stand in for one missing day, not more
+
+  [[align.fields]]
+  source = "test_plan"
+  column = "planned_lots"
+  agg = "sum"
+  fill = "zero"
+
+  [[align.fields]]
+  source = "tester_capacity"
+  column = "tester_hours"
+  agg = "sum"
+
+[[join]]
+source = "product_master"
+on = ["product_id"]
+columns = ["test_hours_per_lot", "units_per_lot"]
+
+[derive]
+tester_hours_needed = "planned_lots * test_hours_per_lot"
+capacity_gap_hours = "tester_hours - tester_hours_needed"
+material_needed_units = "planned_lots * units_per_lot"
+material_cover_ratio = "units_on_hand / material_needed_units"
+
+[[output_checks]]
+name = "known_product"
+type = "allowed_values"
+column = "product_id"
+values = ["PA-100", "PB-220", "PC-310"]
+
+[[output_checks]]
+type = "not_null"
+column = "test_hours_per_lot"
+
+[[output_checks]]
+type = "not_null"
+column = "units_on_hand"
+
+[[output_checks]]
+type = "not_null"
+column = "tester_hours"
+
+[[table_checks]]
+type = "freshness"
+max_age = "2d"
+
+[[table_checks]]
+type = "row_count"
+min = 60
+
+[output]
+max_quarantine_share = 0.10
