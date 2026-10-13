@@ -2,8 +2,8 @@
 
 All values are invented. The files imitate data a test-planning team
 assembles from separate systems: material inventory, the test plan, tester
-capacity, and a product master. They include a negative inventory entry, a
-missing day, a plan line exported twice, and a product the master does not
+capacity, and a product master. They include a negative inventory entry, two
+missing days, a plan line exported twice, and a product the master does not
 know.
 
 Run: python examples/semiconductor_test/generate.py
@@ -36,7 +36,7 @@ def main() -> None:
     for d in range(DAYS):
         day = START + timedelta(days=d)
         for pid, (_, units_per_lot) in PRODUCTS.items():
-            if not (pid == "PB-220" and d == 12):  # missing day in inventory feed
+            if not (pid == "PB-220" and d in (12, 13)):  # two missing days in the inventory feed
                 inventory.append([day.isoformat(), pid, rng.randint(6, 14) * units_per_lot])
             plan.append([day.isoformat(), pid, rng.randint(2, 9)])
             capacity.append([day.isoformat(), pid, rng.choice([16, 20, 24, 24, 32])])

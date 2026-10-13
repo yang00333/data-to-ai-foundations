@@ -5,8 +5,8 @@
   "as_of": "2026-05-31T06:00:00",
   "sources": {
     "inventory": {
-      "rows_read": 89,
-      "rows_passed": 88,
+      "rows_read": 88,
+      "rows_passed": 87,
       "rows_quarantined": 1,
       "by_reason": {
         "inventory_not_negative": 1
@@ -33,58 +33,95 @@
       "by_reason": {}
     }
   },
-  "output": {
-    "rows_aligned": 91,
-    "rows_delivered": 90,
-    "rows_quarantined": 1,
-    "by_reason": {
-      "known_product": 1,
-      "not_null:test_hours_per_lot": 1,
-      "not_null:tester_hours": 1,
-      "not_null:units_on_hand": 1
-    },
-    "time_range": [
-      "2026-05-01T00:00:00",
-      "2026-05-30T00:00:00"
-    ],
-    "columns": [
-      "ts",
-      "product_id",
-      "units_on_hand",
-      "planned_lots",
-      "tester_hours",
-      "test_hours_per_lot",
-      "units_per_lot",
-      "tester_hours_needed",
-      "capacity_gap_hours",
-      "material_needed_units",
-      "material_cover_ratio"
-    ]
+  "foundation": {
+    "rows": 91,
+    "seconds": 0.002,
+    "built": "once, shared by every profile below"
   },
-  "table_checks": [
-    {
-      "check": "freshness",
-      "passed": true,
-      "severity": "fail",
-      "detail": "latest 2026-05-30T00:00:00, age 1 day, 6:00:00 (maximum 2 days, 0:00:00)"
+  "profiles": {
+    "planning_dashboard": {
+      "description": "Daily planning view for the test-operations team. An inventory snapshot may stand in for up to three missing days.",
+      "status": "success",
+      "rows_delivered": 90,
+      "rows_quarantined": 1,
+      "by_reason": {
+        "known_product": 1
+      },
+      "time_range": [
+        "2026-05-01T00:00:00",
+        "2026-05-30T00:00:00"
+      ],
+      "columns": [
+        "ts",
+        "product_id",
+        "units_on_hand",
+        "planned_lots",
+        "tester_hours",
+        "test_hours_per_lot",
+        "units_per_lot",
+        "tester_hours_needed",
+        "capacity_gap_hours",
+        "material_needed_units",
+        "material_cover_ratio"
+      ],
+      "table_checks": [
+        {
+          "check": "freshness",
+          "passed": true,
+          "severity": "fail",
+          "detail": "latest 2026-05-30T00:00:00, age 1 day, 6:00:00 (maximum 2 days, 0:00:00)"
+        }
+      ]
     },
-    {
-      "check": "row_count",
-      "passed": true,
-      "severity": "fail",
-      "detail": "90 rows (minimum 60)"
-    },
-    {
-      "check": "max_quarantine_share",
-      "passed": true,
-      "severity": "fail",
-      "detail": "1.1% of aligned rows quarantined (maximum 10%)"
+    "capacity_forecast_model": {
+      "description": "Rows for tester-capacity and material-shortage forecasting. Known products only; every input present.",
+      "status": "success",
+      "rows_delivered": 89,
+      "rows_quarantined": 2,
+      "by_reason": {
+        "known_product": 1,
+        "not_null:test_hours_per_lot": 1,
+        "not_null:tester_hours": 1,
+        "not_null:units_on_hand": 2
+      },
+      "time_range": [
+        "2026-05-01T00:00:00",
+        "2026-05-30T00:00:00"
+      ],
+      "columns": [
+        "ts",
+        "product_id",
+        "units_on_hand",
+        "planned_lots",
+        "tester_hours",
+        "test_hours_per_lot",
+        "units_per_lot",
+        "tester_hours_needed",
+        "capacity_gap_hours",
+        "material_needed_units",
+        "material_cover_ratio"
+      ],
+      "table_checks": [
+        {
+          "check": "freshness",
+          "passed": true,
+          "severity": "fail",
+          "detail": "latest 2026-05-30T00:00:00, age 1 day, 6:00:00 (maximum 2 days, 0:00:00)"
+        },
+        {
+          "check": "row_count",
+          "passed": true,
+          "severity": "fail",
+          "detail": "89 rows (minimum 60)"
+        },
+        {
+          "check": "max_quarantine_share",
+          "passed": true,
+          "severity": "fail",
+          "detail": "2.2% of rows held back (maximum 10%)"
+        }
+      ]
     }
-  ],
-  "timings_seconds": {
-    "read_and_check_sources": 0.0021,
-    "align": 0.0011,
-    "output_checks": 0.0001,
-    "total": 0.0047
-  }
+  },
+  "total_seconds": 0.0041
 }

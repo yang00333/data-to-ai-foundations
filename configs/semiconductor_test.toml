@@ -79,31 +79,42 @@ capacity_gap_hours = "tester_hours - tester_hours_needed"
 material_needed_units = "planned_lots * units_per_lot"
 material_cover_ratio = "units_on_hand / material_needed_units"
 
-[[output_checks]]
-name = "known_product"
-type = "allowed_values"
-column = "product_id"
-values = ["PA-100", "PB-220", "PC-310"]
+# Readiness profiles: the same foundation, prepared for two downstream uses.
 
-[[output_checks]]
-type = "not_null"
-column = "test_hours_per_lot"
+[[profiles]]
+name = "planning_dashboard"
+description = "Daily planning view for the test-operations team. An inventory snapshot may stand in for up to three missing days."
+fill = { units_on_hand = { method = "ffill", limit = 3 } }
+  [[profiles.output_checks]]
+  name = "known_product"
+  type = "allowed_values"
+  column = "product_id"
+  values = ["PA-100", "PB-220", "PC-310"]
+  [[profiles.table_checks]]
+  type = "freshness"
+  max_age = "2d"
 
-[[output_checks]]
-type = "not_null"
-column = "units_on_hand"
-
-[[output_checks]]
-type = "not_null"
-column = "tester_hours"
-
-[[table_checks]]
-type = "freshness"
-max_age = "2d"
-
-[[table_checks]]
-type = "row_count"
-min = 60
-
-[output]
+[[profiles]]
+name = "capacity_forecast_model"
+description = "Rows for tester-capacity and material-shortage forecasting. Known products only; every input present."
 max_quarantine_share = 0.10
+  [[profiles.output_checks]]
+  name = "known_product"
+  type = "allowed_values"
+  column = "product_id"
+  values = ["PA-100", "PB-220", "PC-310"]
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "test_hours_per_lot"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "units_on_hand"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "tester_hours"
+  [[profiles.table_checks]]
+  type = "freshness"
+  max_age = "2d"
+  [[profiles.table_checks]]
+  type = "row_count"
+  min = 60

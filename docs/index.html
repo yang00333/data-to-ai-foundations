@@ -28,7 +28,7 @@
 <main id="main">
   <section class="hero wrap">
     <h1>Most AI projects stall on the data, not the model.</h1>
-    <p class="lede">Data-to-AI Foundations is an open reference implementation of the layer in between: it reads operational data as it really arrives, holds back what a model should never see, and delivers one clean table. The parts that repeat are written once; the parts that differ are configuration.</p>
+    <p class="lede">Data-to-AI Foundations is an open reference implementation of the layer in between. It builds one checked, aligned foundation from operational data as it really arrives, then prepares that foundation for each downstream use: a dashboard, a forecasting model, an AI assistant. The parts that repeat are written once; the parts that differ are configuration.</p>
     <p class="actions">
       <a class="button primary" href="https://github.com/yang00333/data-to-ai-foundations">View the code on GitHub</a>
       <a class="button" href="#how">See how it works</a>
@@ -84,20 +84,44 @@
   <section class="prose wrap" id="problem">
     <h2>The layer every AI project rebuilds</h2>
     <p>An organization with sensors, test equipment, or business systems usually has the data an AI application needs. What it lacks is a dependable path from those systems to the model: readings on different schedules and in different units, gaps, faults, duplicates, and no record of what was thrown away or why.</p>
-    <p>That path tends to be built inside each project and shaped around that project's data, so little of it carries over to the next. This project separates what repeats from what changes, and shows the result working in two very different settings.</p>
+    <p>That path is usually built twice over: once for each industry, and again within each organization for each kind of downstream use. A dashboard, a forecasting model, and an AI application each need the data in a different state, so the same sources are often extracted, cleaned, and aligned several times. This project separates those two dimensions, and shows the result working in two very different settings.</p>
+  </section>
+
+  <section class="profiles wrap" id="profiles">
+    <h2>One foundation, prepared for each use</h2>
+    <p class="intro">The same 48 hours of pond data, including the 90-minute oxygen outage, delivered three ways from one foundation built once.</p>
+    <div class="profile-grid">
+      <article>
+        <h3>Analytics dashboard</h3>
+        <p class="figure">192 rows</p>
+        <p>Every 15-minute step. The outage stays visible as a gap on the chart, and slow-changing pH may be carried across a two-hour gap.</p>
+      </article>
+      <article>
+        <h3>Forecasting model</h3>
+        <p class="figure">180 rows</p>
+        <p>Only complete rows. The 12 incomplete steps are held back with their reasons, and no oxygen value is invented.</p>
+      </article>
+      <article>
+        <h3>AI assistant</h3>
+        <p class="figure">1 row</p>
+        <p>The current state of the pond at 23:45, with a low-oxygen flag, so the assistant answers questions about right now.</p>
+      </article>
+    </div>
+    <p class="small">Each use is a readiness profile in the configuration: how far gaps may be filled, which values must be present, how fresh the data must be, and whether the use needs history or only the latest state.</p>
   </section>
 
   <section class="how wrap" id="how">
     <h2>One sequence for every domain</h2>
-    <p class="intro">Every pipeline runs the same steps, in the same order. The code for these steps is shared.</p>
+    <p class="intro">Every pipeline runs the same steps, in the same order. The first five build the shared foundation once; the last three run for each readiness profile. The code for all of them is shared.</p>
     <ol class="sequence">
       <li><strong>Read</strong><span>CSV connectors, time parsing, column mapping</span></li>
       <li><strong>De-duplicate</strong><span>repeated records set aside with a reason</span></li>
       <li><strong>Check sources</strong><span>impossible values stopped at the door</span></li>
-      <li><strong>Align</strong><span>one grid per entity, short gaps filled only where allowed</span></li>
-      <li><strong>Join and derive</strong><span>lookup tables, unit conversions, computed fields</span></li>
-      <li><strong>Check output</strong><span>what may reach the model, and what may not</span></li>
-      <li><strong>Deliver and report</strong><span>AI-ready table, quarantine, run report</span></li>
+      <li><strong>Align</strong><span>one grid per entity, gaps kept as gaps</span></li>
+      <li><strong>Join</strong><span>lookup tables such as a product master</span></li>
+      <li class="per-use"><strong>Fill and derive</strong><span>as far as each use allows; unit conversions, flags</span></li>
+      <li class="per-use"><strong>Check for the use</strong><span>what this use must and must not receive</span></li>
+      <li class="per-use"><strong>Deliver and report</strong><span>one table per use, quarantine, run report</span></li>
     </ol>
 
     <h3>What changes is a configuration file</h3>
@@ -138,12 +162,13 @@ type = "allowed_values"</code></pre>
     </div>
 
     <dl class="reuse">
-      <div><dt>Shared pipeline code</dt><dd>505 lines</dd></div>
-      <div><dt>Aquaculture configuration</dt><dd>117 lines</dd></div>
-      <div><dt>Semiconductor configuration</dt><dd>89 lines</dd></div>
+      <div><dt>Shared pipeline code</dt><dd>507 lines</dd></div>
+      <div><dt>Aquaculture configuration</dt><dd>148 lines</dd></div>
+      <div><dt>Semiconductor configuration</dt><dd>103 lines</dd></div>
+      <div><dt>Readiness profiles</dt><dd>5</dd></div>
       <div><dt>New code for the second domain</dt><dd>0 lines</dd></div>
     </dl>
-    <p class="small">Counts for the two synthetic examples in the repository, from <code>scripts/reuse_report.py</code>. They describe this code, not effort on any real project.</p>
+    <p class="small">Counts for the synthetic examples in the repository, from <code>scripts/reuse_report.py</code>.</p>
   </section>
 
   <section class="report wrap" id="report">
@@ -183,6 +208,7 @@ python -m unittest discover -s tests</code></pre>
       <li>Database and API connectors alongside CSV</li>
       <li>Schema-change detection that flags a renamed or retyped field before it reaches a model</li>
       <li>A third example domain, added the same way, to test the core again</li>
+      <li>Readiness profiles that re-aggregate, such as hourly summaries for an AI assistant</li>
       <li>Write-ups on what each reuse test shows, including where reuse does not save effort</li>
     </ul>
   </section>

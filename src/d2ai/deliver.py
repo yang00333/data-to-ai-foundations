@@ -1,4 +1,4 @@
-"""Delivering results: the AI-ready table, the quarantine, and the run report."""
+"""Delivering results: one table per readiness profile, the quarantine, and the run report."""
 
 from __future__ import annotations
 
@@ -19,31 +19,34 @@ def _fmt(value: Any) -> Any:
     return value
 
 
+def _write_csv(path: Path, rows: list[dict[str, Any]], columns: list[str]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="ignore")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: _fmt(row.get(k)) for k in columns})
+
+
 def write_outputs(result: RunResult, out_dir: str | Path) -> dict[str, Path]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    paths = {
-        "table": out / "ai_ready.csv",
-        "quarantine": out / "quarantine.csv",
-        "report": out / "run_report.json",
-    }
+    paths: dict[str, Path] = {}
 
-    with paths["table"].open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=result.columns, extrasaction="ignore")
-        writer.writeheader()
-        for row in result.rows:
-            writer.writerow({k: _fmt(row.get(k)) for k in result.columns})
+    for p in result.profiles:
+        paths[p.name] = out / f"{p.name}.csv"
+        _write_csv(paths[p.name], p.rows, p.columns)
 
+    held = list(result.source_quarantine)
+    for p in result.profiles:
+        held += p.quarantine
     q_cols: list[str] = ["_stage", "_source", "_reason"]
-    for row in result.quarantine:
+    for row in held:
         for k in row:
             if k not in q_cols:
                 q_cols.append(k)
-    with paths["quarantine"].open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=q_cols)
-        writer.writeheader()
-        for row in result.quarantine:
-            writer.writerow({k: _fmt(row.get(k)) for k in q_cols})
+    paths["quarantine"] = out / "quarantine.csv"
+    _write_csv(paths["quarantine"], held, q_cols)
 
+    paths["report"] = out / "run_report.json"
     paths["report"].write_text(json.dumps(result.report, indent=2) + "\n", encoding="utf-8")
     return paths

@@ -26,12 +26,15 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{r['pipeline']}: {r['status']}")
     for name, s in r["sources"].items():
         print(f"  source {name:<22} read {s['rows_read']:>6}  quarantined {s['rows_quarantined']:>4}")
-    o = r["output"]
-    print(f"  output rows delivered {o['rows_delivered']}, quarantined {o['rows_quarantined']}")
-    for c in r["table_checks"]:
-        mark = "ok " if c["passed"] else "FAIL"
-        print(f"  [{mark}] {c['check']}: {c['detail']}")
-    print(f"  wrote {paths['table']}, {paths['quarantine'].name}, {paths['report'].name}")
+    print(f"  foundation: {r['foundation']['rows']} aligned rows, built once")
+    for p in result.profiles:
+        pr = p.report
+        print(f"  profile {p.name:<22} {pr['status']:<8} delivered {pr['rows_delivered']:>4}, "
+              f"held back {pr['rows_quarantined']:>4}")
+        for c in pr["table_checks"]:
+            mark = "ok " if c["passed"] else "FAIL"
+            print(f"      [{mark}] {c['check']}: {c['detail']}")
+    print(f"  wrote {len(result.profiles)} profile tables, quarantine.csv and run_report.json to {out_dir}")
     return 0 if result.ok else 1
 
 

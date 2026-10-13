@@ -2,17 +2,18 @@
 
 A small, dependency-free reference implementation of a reusable data foundation for AI applications.
 
-Most AI projects do not stall on the model. They stall on the data underneath it: sources that report at different rates, in different units, with gaps, faults, and duplicates. Teams usually rebuild that layer from scratch for every new application. This repository shows the alternative in working code: **the parts that repeat are written once, and the parts that differ are configuration.**
+Most AI projects do not stall on the model. They stall on the data underneath it: sources that report at different rates, in different units, with gaps, faults, and duplicates. That data is usually prepared separately for each industry, and then again for each downstream use: a dashboard, a machine-learning model, and an AI application each need it in a different state. This repository separates those two dimensions in working code: **the parts that repeat are written once, and the parts that differ are configuration.**
 
-- **Shared core** (`src/d2ai/`): read sources, drop duplicates, check quality, align onto one time grid, join lookup tables, derive columns, check the result, deliver it, and report on the run.
-- **Domain rules** (`configs/*.toml`): which sources, which units, which ranges are physically possible, how long a reading may be carried forward, what must never reach the model.
+- **Shared core** (`src/d2ai/`): read sources, drop duplicates, check quality, align onto one time grid, and join lookup tables. This foundation is built once per run.
+- **Domain rules** (`configs/*.toml`): which sources, which units, which ranges are physically possible.
+- **Readiness profiles** (also in the configuration): what each downstream use requires from the same foundation, such as how far a gap may be filled, which values must be present, how fresh the data must be, and whether the user needs history or only the current state.
 
 Two examples run on the same core with no domain-specific code:
 
-| Example | Data (synthetic) | Output for the AI application |
+| Example | Data (synthetic) | Readiness profiles built from one foundation |
 |---|---|---|
-| Aquaculture | Dissolved-oxygen, pH, and temperature sensors on different schedules; farm weather; a hand-kept feeding log | One row per pond per 15 minutes for dissolved-oxygen forecasting and risk alerts |
-| Semiconductor testing | Material inventory, test plan, tester capacity, product master | One row per product per day for capacity and material-shortage forecasting |
+| Aquaculture | Dissolved-oxygen, pH, and temperature sensors on different schedules; farm weather; a hand-kept feeding log | **Analytics dashboard**: every 15-minute row, gaps left visible. **Forecasting model**: only complete rows, no invented oxygen values. **AI assistant context**: the current state of each pond, with a low-oxygen flag |
+| Semiconductor testing | Material inventory, test plan, tester capacity, product master | **Planning dashboard**: an inventory snapshot may stand in for up to three missing days. **Capacity forecast model**: known products only, every input present |
 
 Project site: https://yang00333.github.io/data-to-ai-foundations/
 
@@ -28,11 +29,11 @@ PYTHONPATH=src python -m d2ai run configs/semiconductor_test.toml
 python -m unittest discover -s tests
 ```
 
-Each run writes three files to `out/<pipeline name>/`:
+Each run writes to `out/<pipeline name>/`:
 
-- `ai_ready.csv`: the table the AI application reads
-- `quarantine.csv`: every row that was held back, with the stage and the reason
-- `run_report.json`: what was read, what was held back and why, freshness, volume, and timings
+- one CSV per readiness profile, for example `analytics_dashboard.csv`, `forecasting_model.csv`, `ai_assistant_context.csv`
+- `quarantine.csv`: every row that was held back, with the stage, the profile, and the reason
+- `run_report.json`: what each source sent, what was held back and why, the shared foundation, and the checks and results for each profile
 
 Sample outputs are committed in `examples/*/sample_output/`.
 
@@ -46,8 +47,8 @@ The synthetic data imitate problems real operational data have, so the checks ha
 |---|---|---|
 | Dissolved-oxygen sensor reports 45 mg/L (impossible) six times | Range check 0–20 mg/L at the source | Faulty readings quarantined before they can distort averages |
 | Temperature probe reports Fahrenheit | Derived column `(water_temp_f - 32) * 5 / 9` | Model receives Celsius |
-| 90-minute oxygen sensor outage | No fill allowed for oxygen | Six 15-minute rows held back instead of invented |
-| 2-hour pH gap | pH may be carried forward 30 minutes | Short gaps filled; the rest held back |
+| 90-minute oxygen sensor outage | No fill allowed for oxygen | The model holds six rows back; the dashboard shows them as a gap; nothing is invented |
+| 2-hour pH gap | The model may carry pH 30 minutes; the dashboard may carry it 2 hours | The dashboard bridges the gap; the model holds those rows back |
 | Weather has no pond column | Sources without entity keys apply to every pond | Weather joined to each pond's rows |
 | Duplicate records, unreadable timestamp | De-duplication and parse rejection | Quarantined with reasons |
 
@@ -56,7 +57,7 @@ The synthetic data imitate problems real operational data have, so the checks ha
 | Problem in the data | Rule in `configs/semiconductor_test.toml` | Result |
 |---|---|---|
 | Negative inventory entry | Inventory must be ≥ 0 | Rejected at the source |
-| Missing inventory day | A snapshot may stand in for one day, not more | Gap covered by the previous day's snapshot |
+| Two missing inventory days | The model accepts a one-day stand-in; the dashboard accepts three | The dashboard covers both days; the model holds the second back |
 | Plan line exported twice | De-duplicate on date and product | Duplicate quarantined |
 | Product not in the product master | Only known products may reach the model | Held back, with every missing field listed |
 
@@ -67,26 +68,27 @@ The synthetic data imitate problems real operational data have, so the checks ha
 | Source and ingestion | `sources.py`: CSV connectors, time parsing, column mapping, numeric casting |
 | Integration and transformation | `align.py` (time grid, aggregation, bounded gap filling, lookup joins); `expressions.py` (safe derived columns) |
 | Validation and quality | `checks.py`: row checks with quarantine; table checks for freshness, volume, and share held back |
-| Orchestration | `pipeline.py`: the fixed sequence every domain runs; in production the run itself would be scheduled by an orchestrator such as Airflow |
-| Delivery and AI consumption | `deliver.py`: the AI-ready table and the quarantine |
+| Orchestration | `pipeline.py`: builds the shared foundation once, then runs each readiness profile; in production the run itself would be scheduled by an orchestrator such as Airflow |
+| Delivery and AI consumption | `deliver.py`: one table per readiness profile, plus the quarantine |
 | Observability | `run_report.json`: counts and reasons per source, freshness, timings, pass/fail status |
 
 ## Reuse in this repository
 
 ```
 $ python scripts/reuse_report.py
-Shared pipeline code (src/d2ai, 8 files): 505 lines
-  aquaculture          domain configuration:  117 lines (new code written for this domain: 0 lines)
-  semiconductor_test   domain configuration:   89 lines (new code written for this domain: 0 lines)
+Shared pipeline code (src/d2ai, 8 files): 507 lines
+  aquaculture          domain configuration:  148 lines (new code written for this domain: 0 lines)
+  semiconductor_test   domain configuration:  103 lines (new code written for this domain: 0 lines)
 ```
 
-This describes the two synthetic examples here. It is not a claim about effort on any real project.
+Two domains and five readiness profiles run on the same shared code. These counts describe the synthetic examples in this repository.
 
 ## Adding a domain
 
 1. Put the source files somewhere the configuration can reach.
-2. Copy a configuration from `configs/` and describe the sources, the grid (`freq`, `keys`), the fields and how each is aggregated and filled, the derived columns, and the checks.
-3. Run it. If a rule cannot be expressed, that is a signal the shared core needs a new capability, which is how the core grows.
+2. Copy a configuration from `configs/` and describe the sources, the grid (`freq`, `keys`), and the fields and how each is aggregated.
+3. Add a readiness profile for each downstream use: how far gaps may be filled, the derived columns it needs, the checks its rows must pass, and whether it needs history or only the latest state.
+4. Run it. If a rule cannot be expressed, that is a signal the shared core needs a new capability, which is how the core grows.
 
 ## Scope
 

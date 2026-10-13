@@ -58,7 +58,9 @@ def floor_time(ts: datetime, step: timedelta) -> datetime:
 
 
 def align(sources: dict[str, list[Row]], freq: str, keys: list[str],
-          fields: list[FieldSpec]) -> list[Row]:
+          fields: list[FieldSpec], apply_fill: bool = True) -> list[Row]:
+    """Align sources onto one grid. With apply_fill=False, gaps stay empty so that each
+    readiness profile can decide later how much filling its downstream use tolerates."""
     step = parse_duration(freq)
 
     # 1. Bucket every value: (field, key tuple, bucket start) -> values in time order.
@@ -96,7 +98,7 @@ def align(sources: dict[str, list[Row]], freq: str, keys: list[str],
             agg = _AGGREGATIONS[f.agg]
             values = [agg(buckets[(f.name, lookup_key, b)]) if (f.name, lookup_key, b) in buckets
                       else None for b in grid]
-            series[f.name] = _fill(values, f.fill, f.fill_limit)
+            series[f.name] = _fill(values, f.fill, f.fill_limit) if apply_fill else values
         for i, b in enumerate(grid):
             row: Row = {"ts": b}
             row.update(dict(zip(keys, k)))
@@ -123,6 +125,21 @@ def _fill(values: list[Any], method: str | None, limit: int | None) -> list[Any]
                 filled.append(last if last is not None and (limit is None or gap <= limit) else None)
         return filled
     raise ValueError(f"unknown fill method {method!r}")
+
+
+def fill_rows(rows: list[Row], keys: list[str], column: str,
+              method: str | None, limit: int | None) -> list[Row]:
+    """Fill one column of aligned rows, entity by entity in time order. Returns new rows."""
+    groups: dict[tuple, list[int]] = defaultdict(list)
+    for i, r in enumerate(rows):
+        groups[tuple(r.get(k) for k in keys)].append(i)
+    out = [dict(r) for r in rows]
+    for idxs in groups.values():
+        idxs.sort(key=lambda i: rows[i]["ts"])
+        filled = _fill([rows[i].get(column) for i in idxs], method, limit)
+        for i, v in zip(idxs, filled):
+            out[i][column] = v
+    return out
 
 
 def join_static(rows: list[Row], lookup: list[Row], on: list[str], columns: list[str]) -> list[Row]:

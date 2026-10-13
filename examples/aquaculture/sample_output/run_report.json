@@ -44,54 +44,126 @@
       }
     }
   },
-  "output": {
-    "rows_aligned": 192,
-    "rows_delivered": 180,
-    "rows_quarantined": 12,
-    "by_reason": {
-      "not_null:do_mg_l": 6,
-      "not_null:ph": 6
-    },
-    "time_range": [
-      "2026-06-01T00:00:00",
-      "2026-06-02T23:45:00"
-    ],
-    "columns": [
-      "ts",
-      "pond_id",
-      "do_mg_l",
-      "do_min_mg_l",
-      "ph",
-      "water_temp_c",
-      "air_temp_c",
-      "rain_mm",
-      "feed_kg"
-    ]
+  "foundation": {
+    "rows": 192,
+    "seconds": 0.0244,
+    "built": "once, shared by every profile below"
   },
-  "table_checks": [
-    {
-      "check": "freshness",
-      "passed": true,
-      "severity": "fail",
-      "detail": "latest 2026-06-02T23:45:00, age 0:25:00 (maximum 0:30:00)"
+  "profiles": {
+    "analytics_dashboard": {
+      "description": "Charts of pond conditions for farm staff. Gaps stay visible; slow-changing readings may be carried forward longer.",
+      "status": "success",
+      "rows_delivered": 192,
+      "rows_quarantined": 0,
+      "by_reason": {},
+      "time_range": [
+        "2026-06-01T00:00:00",
+        "2026-06-02T23:45:00"
+      ],
+      "columns": [
+        "ts",
+        "pond_id",
+        "do_mg_l",
+        "do_min_mg_l",
+        "ph",
+        "water_temp_c",
+        "air_temp_c",
+        "rain_mm",
+        "feed_kg",
+        "low_oxygen"
+      ],
+      "table_checks": [
+        {
+          "check": "freshness",
+          "passed": true,
+          "severity": "fail",
+          "detail": "latest 2026-06-02T23:45:00, age 0:25:00 (maximum 2:00:00)"
+        },
+        {
+          "check": "row_count",
+          "passed": true,
+          "severity": "fail",
+          "detail": "192 rows (minimum 150)"
+        }
+      ]
     },
-    {
-      "check": "row_count",
-      "passed": true,
-      "severity": "fail",
-      "detail": "180 rows (minimum 150)"
+    "forecasting_model": {
+      "description": "Training and scoring rows for a dissolved-oxygen forecast. No invented oxygen values; every input present.",
+      "status": "success",
+      "rows_delivered": 180,
+      "rows_quarantined": 12,
+      "by_reason": {
+        "not_null:do_mg_l": 6,
+        "not_null:ph": 6
+      },
+      "time_range": [
+        "2026-06-01T00:00:00",
+        "2026-06-02T23:45:00"
+      ],
+      "columns": [
+        "ts",
+        "pond_id",
+        "do_mg_l",
+        "do_min_mg_l",
+        "ph",
+        "water_temp_c",
+        "air_temp_c",
+        "rain_mm",
+        "feed_kg"
+      ],
+      "table_checks": [
+        {
+          "check": "freshness",
+          "passed": true,
+          "severity": "fail",
+          "detail": "latest 2026-06-02T23:45:00, age 0:25:00 (maximum 0:30:00)"
+        },
+        {
+          "check": "row_count",
+          "passed": true,
+          "severity": "fail",
+          "detail": "180 rows (minimum 150)"
+        },
+        {
+          "check": "max_quarantine_share",
+          "passed": true,
+          "severity": "fail",
+          "detail": "6.2% of rows held back (maximum 10%)"
+        }
+      ]
     },
-    {
-      "check": "max_quarantine_share",
-      "passed": true,
-      "severity": "fail",
-      "detail": "6.2% of aligned rows quarantined (maximum 10%)"
+    "ai_assistant_context": {
+      "description": "The current state of each pond, for the farm's AI assistant to answer questions about right now.",
+      "status": "success",
+      "rows_delivered": 1,
+      "rows_quarantined": 12,
+      "by_reason": {
+        "not_null:do_mg_l": 6,
+        "not_null:ph": 6
+      },
+      "time_range": [
+        "2026-06-02T23:45:00",
+        "2026-06-02T23:45:00"
+      ],
+      "columns": [
+        "ts",
+        "pond_id",
+        "do_mg_l",
+        "do_min_mg_l",
+        "ph",
+        "water_temp_c",
+        "air_temp_c",
+        "low_oxygen"
+      ],
+      "table_checks": [
+        {
+          "check": "freshness",
+          "passed": true,
+          "severity": "fail",
+          "detail": "latest 2026-06-02T23:45:00, age 0:25:00 (maximum 0:30:00)"
+        }
+      ]
     }
-  ],
-  "timings_seconds": {
-    "read_and_check_sources": 0.0208,
-    "align": 0.0138,
-    "output_checks": 0.0005,
-    "total": 0.0352
-  }
+  },
+  "total_seconds": 0.0272
 }

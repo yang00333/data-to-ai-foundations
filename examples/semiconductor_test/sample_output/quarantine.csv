@@ -1,4 +1,6 @@
 _stage,_source,_reason,product_id,units_on_hand,ts,planned_lots,tester_hours,test_hours_per_lot,units_per_lot,tester_hours_needed,capacity_gap_hours,material_needed_units,material_cover_ratio
 source,inventory,inventory_not_negative,PC-310,-1500.0,2026-05-07T00:00:00,,,,,,,,
 source,test_plan,"duplicate:ts,product_id",PA-100,,2026-05-11T00:00:00,4.0,,,,,,,
-output,aligned,known_product;not_null:test_hours_per_lot;not_null:units_on_hand;not_null:tester_hours,PX-999,,2026-05-06T00:00:00,4.0,,,,,,,
+output,planning_dashboard,known_product,PX-999,,2026-05-06T00:00:00,4.0,,,,,,,
+output,capacity_forecast_model,not_null:units_on_hand,PB-220,,2026-05-14T00:00:00,5.0,32.0,5.0,1200.0,25.0,7.0,6000.0,
+output,capacity_forecast_model,known_product;not_null:test_hours_per_lot;not_null:units_on_hand;not_null:tester_hours,PX-999,,2026-05-06T00:00:00,4.0,,,,,,,

@@ -21,6 +21,10 @@ _BIN_OPS = {
     ast.Pow: operator.pow,
 }
 _UNARY_OPS = {ast.USub: operator.neg, ast.UAdd: operator.pos}
+_COMPARE_OPS = {
+    ast.Lt: operator.lt, ast.LtE: operator.le, ast.Gt: operator.gt,
+    ast.GtE: operator.ge, ast.Eq: operator.eq, ast.NotEq: operator.ne,
+}
 _FUNCTIONS = {"abs": abs, "min": min, "max": max, "round": round}
 
 
@@ -33,7 +37,7 @@ def compile_expression(text: str) -> ast.Expression:
     for node in ast.walk(tree):
         allowed = (
             ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant, ast.Name,
-            ast.Load, ast.Call, *_BIN_OPS, *_UNARY_OPS,
+            ast.Load, ast.Call, ast.Compare, *_BIN_OPS, *_UNARY_OPS, *_COMPARE_OPS,
         )
         if not isinstance(node, allowed):
             raise ExpressionError(f"not allowed in expression {text!r}: {type(node).__name__}")
@@ -62,6 +66,14 @@ def evaluate(tree: ast.Expression, row: Mapping[str, Any]) -> Any:
             return _UNARY_OPS[type(node.op)](_eval(node.operand))
         if isinstance(node, ast.BinOp):
             return _BIN_OPS[type(node.op)](_eval(node.left), _eval(node.right))
+        if isinstance(node, ast.Compare):
+            left = _eval(node.left)
+            for op, comparator in zip(node.ops, node.comparators):
+                right = _eval(comparator)
+                if not _COMPARE_OPS[type(op)](left, right):
+                    return False
+                left = right
+            return True
         if isinstance(node, ast.Call):
             func = _FUNCTIONS[node.func.id]  # type: ignore[union-attr]
             return func(*[_eval(arg) for arg in node.args])

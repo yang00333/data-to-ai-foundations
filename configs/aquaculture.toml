@@ -112,29 +112,58 @@ keys = ["pond_id"]
   agg = "sum"
   fill = "zero"             # no feeding record means no feeding
 
-[[output_checks]]
-type = "not_null"
-column = "do_mg_l"
+# Readiness profiles: the same foundation, prepared for three downstream uses.
 
-[[output_checks]]
-type = "not_null"
-column = "ph"
+[[profiles]]
+name = "analytics_dashboard"
+description = "Charts of pond conditions for farm staff. Gaps stay visible; slow-changing readings may be carried forward longer."
+fill = { ph = { method = "ffill", limit = 8 }, water_temp_c = { method = "ffill", limit = 4 } }
+derive = { low_oxygen = "do_min_mg_l < 4" }
+  [[profiles.table_checks]]
+  type = "freshness"
+  max_age = "2h"
+  [[profiles.table_checks]]
+  type = "row_count"
+  min = 150
 
-[[output_checks]]
-type = "not_null"
-column = "water_temp_c"
-
-[[output_checks]]
-type = "not_null"
-column = "air_temp_c"
-
-[[table_checks]]
-type = "freshness"
-max_age = "30min"
-
-[[table_checks]]
-type = "row_count"
-min = 150
-
-[output]
+[[profiles]]
+name = "forecasting_model"
+description = "Training and scoring rows for a dissolved-oxygen forecast. No invented oxygen values; every input present."
 max_quarantine_share = 0.10
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "do_mg_l"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "ph"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "water_temp_c"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "air_temp_c"
+  [[profiles.table_checks]]
+  type = "freshness"
+  max_age = "30min"
+  [[profiles.table_checks]]
+  type = "row_count"
+  min = 150
+
+[[profiles]]
+name = "ai_assistant_context"
+description = "The current state of each pond, for the farm's AI assistant to answer questions about right now."
+select = "latest"
+derive = { low_oxygen = "do_min_mg_l < 4" }
+columns = ["ts", "pond_id", "do_mg_l", "do_min_mg_l", "ph", "water_temp_c", "air_temp_c", "low_oxygen"]
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "do_mg_l"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "ph"
+  [[profiles.output_checks]]
+  type = "not_null"
+  column = "water_temp_c"
+  [[profiles.table_checks]]
+  type = "freshness"
+  max_age = "30min"

@@ -130,9 +130,11 @@ section h3 { font-size: 1.2rem; margin: 48px 0 16px; }
 /* The sequence is a real order, so it is numbered */
 .sequence {
   list-style: none; counter-reset: step; margin: 28px 0 0; padding: 0;
-  display: grid; grid-template-columns: repeat(7, 1fr); gap: 0;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 0;
   border-top: 3px solid var(--teal);
 }
+.sequence li.per-use { box-shadow: inset 0 3px 0 var(--amber); margin-top: -3px; padding-top: 19px; }
+.sequence li.per-use::before { color: var(--amber); }
 .sequence li { counter-increment: step; padding: 16px 14px 0 0; position: relative; }
 .sequence li::before {
   content: counter(step); display: block; font-family: var(--mono); font-size: 0.8rem;
@@ -147,7 +149,7 @@ section h3 { font-size: 1.2rem; margin: 48px 0 16px; }
 .domains figcaption strong { display: block; color: var(--ink); font-size: 1.05rem; }
 .domains pre { margin: 0; font-size: 0.8rem; line-height: 1.6; overflow-x: auto; }
 
-.reuse { display: grid; grid-template-columns: repeat(4, 1fr); margin: 36px 0 12px; border-top: 1px solid var(--rule); }
+.reuse { display: grid; grid-template-columns: repeat(5, 1fr); margin: 36px 0 12px; border-top: 1px solid var(--rule); }
 .reuse div { padding: 16px 16px 0 0; }
 .reuse dt { font-size: 0.88rem; color: var(--ink-2); }
 .reuse dd { margin: 4px 0 0; font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
@@ -171,11 +173,21 @@ section h3 { font-size: 1.2rem; margin: 48px 0 16px; }
 footer.site { border-top: 1px solid var(--rule); padding-block: 24px 40px; font-size: 0.88rem; color: var(--ink-2); }
 footer.site p { margin: 0; max-width: var(--measure); }
 
+.profiles { padding-block: 0 80px; }
+.profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 24px 0 16px; }
+.profile-grid article { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 22px; }
+.profile-grid h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.profile-grid .figure { margin: 0 0 10px; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; color: var(--teal); font-variant-numeric: tabular-nums; }
+.profile-grid p { margin: 0; font-size: 0.95rem; color: var(--ink-2); }
+.profile-grid p.figure { color: var(--teal); }
+
 /* Narrow screens */
 @media (max-width: 900px) {
   .sequence { grid-template-columns: repeat(2, 1fr); row-gap: 20px; border-top: none; }
   .sequence li { border-top: 3px solid var(--teal); }
+  .sequence li.per-use { border-top-color: var(--amber); box-shadow: none; margin-top: 0; padding-top: 16px; }
   .reuse { grid-template-columns: repeat(2, 1fr); }
+  .profile-grid { grid-template-columns: 1fr; }
   .report { grid-template-columns: 1fr; gap: 20px; }
 }
 @media (max-width: 760px) {

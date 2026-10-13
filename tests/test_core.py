@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from d2ai.align import FieldSpec, align, floor_time, join_static  # noqa: E402
+from d2ai.align import FieldSpec, align, fill_rows, floor_time, join_static  # noqa: E402
 from d2ai.checks import (apply_row_checks, build_row_check, drop_duplicates,  # noqa: E402
                          parse_duration, run_table_check)
 from d2ai.expressions import ExpressionError, compile_expression, evaluate  # noqa: E402
@@ -25,6 +25,11 @@ class ExpressionTests(unittest.TestCase):
 
     def test_division_by_zero_gives_none(self):
         self.assertIsNone(evaluate(compile_expression("a / b"), {"a": 1, "b": 0}))
+
+    def test_comparison_flags(self):
+        tree = compile_expression("do_min < 4")
+        self.assertTrue(evaluate(tree, {"do_min": 3.2}))
+        self.assertFalse(evaluate(tree, {"do_min": 5.0}))
 
     def test_rejects_unsafe_code(self):
         for text in ("__import__('os')", "a.b", "open('x')", "[1, 2]"):
@@ -77,6 +82,20 @@ class AlignTests(unittest.TestCase):
         rows = align({"a": a, "w": weather}, "15min", ["pond_id"],
                      [FieldSpec("a", "v"), FieldSpec("w", "air", "last")])
         self.assertEqual({(r["pond_id"], r["air"]) for r in rows}, {("P1", 30.0), ("P2", 30.0)})
+
+    def test_fill_rows_per_entity(self):
+        rows = [{"ts": T0 + timedelta(minutes=15 * i), "p": p, "v": v}
+                for p, vals in (("A", [1.0, None, None]), ("B", [None, 2.0, None])) for i, v in enumerate(vals)]
+        out = fill_rows(rows, ["p"], "v", "ffill", 1)
+        self.assertEqual([r["v"] for r in out if r["p"] == "A"], [1.0, 1.0, None])
+        self.assertEqual([r["v"] for r in out if r["p"] == "B"], [None, 2.0, 2.0])
+        self.assertIsNone(rows[1]["v"])  # input left unchanged
+
+    def test_unfilled_alignment_keeps_gaps(self):
+        slow = [{"ts": T0, "s": 1.0}, {"ts": T0 + timedelta(minutes=30), "s": 2.0}]
+        rows = align({"slow": slow}, "10min", [], [FieldSpec("slow", "s", "last", fill="ffill")],
+                     apply_fill=False)
+        self.assertEqual([r["s"] for r in rows], [1.0, None, None, 2.0])
 
     def test_join_static(self):
         rows = join_static([{"p": "A"}, {"p": "Z"}], [{"p": "A", "h": 3.5}], ["p"], ["h"])
