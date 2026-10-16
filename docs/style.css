@@ -54,6 +54,7 @@ code, pre { font-family: var(--mono); }
 
 .wrap { width: min(1080px, 100% - 32px); margin-inline: auto; }
 
+.nowrap { white-space: nowrap; }
 .skip { position: absolute; left: -999px; }
 .skip:focus { left: 16px; top: 12px; background: var(--panel); padding: 8px 12px; z-index: 10; }
 
@@ -173,6 +174,24 @@ section h3 { font-size: 1.2rem; margin: 48px 0 16px; }
 footer.site { border-top: 1px solid var(--rule); padding-block: 24px 40px; font-size: 0.88rem; color: var(--ink-2); }
 footer.site p { margin: 0; max-width: var(--measure); }
 
+.ready { padding-block: 0 80px; }
+.ready .intro { max-width: var(--measure); }
+.ready-list {
+  list-style: none; counter-reset: ready; margin: 28px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.ready-list li {
+  counter-increment: ready; background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 22px; min-width: 0;
+}
+.ready-list li::before {
+  content: counter(ready); display: inline-grid; place-items: center;
+  width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--teal);
+  color: var(--teal); font-family: var(--mono); font-size: 0.8rem; margin-bottom: 12px;
+}
+.ready-list h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.ready-list p { margin: 0; font-size: 0.95rem; color: var(--ink-2); }
+
 .profiles { padding-block: 0 80px; }
 .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 24px 0 16px; }
 .profile-grid article { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 22px; }
@@ -188,10 +207,11 @@ footer.site p { margin: 0; max-width: var(--measure); }
   .sequence li.per-use { border-top-color: var(--amber); box-shadow: none; margin-top: 0; padding-top: 16px; }
   .reuse { grid-template-columns: repeat(2, 1fr); }
   .profile-grid { grid-template-columns: 1fr; }
+  .ready-list { grid-template-columns: repeat(2, 1fr); }
   .report { grid-template-columns: 1fr; gap: 20px; }
 }
 @media (max-width: 760px) {
-  .specimen, .domains { grid-template-columns: 1fr; }
+  .specimen, .domains, .ready-list { grid-template-columns: 1fr; }
   .panel.raw { border-right: none; border-bottom: 1px solid var(--rule); }
   .panel { padding: 22px 18px; }
   .hero { padding-block: 48px 24px; }

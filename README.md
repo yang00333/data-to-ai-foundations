@@ -15,6 +15,17 @@ Two examples run on the same core with no domain-specific code:
 | Aquaculture | Dissolved-oxygen, pH, and temperature sensors on different schedules; farm weather; a hand-kept feeding log | **Analytics dashboard**: every 15-minute row, gaps left visible. **Forecasting model**: only complete rows, no invented oxygen values. **AI assistant context**: the current state of each pond, with a low-oxygen flag |
 | Semiconductor testing | Material inventory, test plan, tester capacity, product master | **Planning dashboard**: an inventory snapshot may stand in for up to three missing days. **Capacity forecast model**: known products only, every input present |
 
+## What "AI-ready" means here
+
+Data counts as AI-ready when it meets six conditions, each checked on every run:
+
+1. **Every value is believable.** Impossible readings are set aside before they can distort an average.
+2. **Everything is on one clock.** Sources that report at different rates are lined up on the same time steps.
+3. **Units and formats agree.** Conversions are rules in the configuration, not hidden in code.
+4. **Missing data stays missing.** Gaps are marked; nothing is invented to fill them.
+5. **Each use gets what it needs.** A dashboard, a model, and an AI assistant each receive the data in the state they require, from the same checked foundation.
+6. **Every change is on record.** Each run reports what every source sent, what was held back, and why.
+
 Project site: https://yang00333.github.io/data-to-ai-foundations/
 
 ## Quick start

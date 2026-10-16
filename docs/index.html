@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data-to-AI Foundations</title>
-<meta name="description" content="An open reference implementation of a reusable data foundation for AI applications: the parts that repeat are written once, the parts that differ are configuration.">
+<meta name="description" content="Free, open software that turns messy sensor and business data into one checked table a dashboard, forecasting model, or AI assistant can trust, with a record of every change.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,6 +17,7 @@
   <div class="wrap bar">
     <a class="mark" href="./">Data-to-AI Foundations</a>
     <nav aria-label="Sections">
+      <a href="#ai-ready">What AI-ready means</a>
       <a href="#how">How it works</a>
       <a href="#run">Run it</a>
       <a href="#writing">Writing</a>
@@ -27,11 +28,11 @@
 
 <main id="main">
   <section class="hero wrap">
-    <h1>Most AI projects stall on the data, not the model.</h1>
-    <p class="lede">Data-to-AI Foundations is an open reference implementation of the layer in between. It builds one checked, aligned foundation from operational data as it really arrives, then prepares that foundation for each downstream use: a dashboard, a forecasting model, an AI assistant. The parts that repeat are written once; the parts that differ are configuration.</p>
+    <h1>Turn messy <span class="nowrap">real-world</span> data into data an AI can trust.</h1>
+    <p class="lede">Sensors, test equipment, and business systems rarely produce clean data. Readings arrive at different times and in different units, some are physically impossible, and some never arrive at all. Data-to-AI Foundations is free, open software that turns that data into one checked table, ready for a dashboard, a forecasting model, or an AI assistant, and records every change it made and why.</p>
     <p class="actions">
       <a class="button primary" href="https://github.com/yang00333/data-to-ai-foundations">View the code on GitHub</a>
-      <a class="button" href="#how">See how it works</a>
+      <a class="button" href="#ai-ready">What “AI-ready” means</a>
     </p>
   </section>
 
@@ -79,6 +80,37 @@
         <li><span class="tag">3</span>The outage is reported and held back, not filled with invented values.</li>
       </ol>
     </div>
+  </section>
+
+  <section class="ready wrap" id="ai-ready">
+    <h2>What “AI-ready” means here</h2>
+    <p class="intro">A model learns from whatever it is given. If faulty readings, mixed units, or invented values reach it, its forecasts and answers inherit those mistakes, and nobody can tell why. Data counts as AI-ready here when it meets six conditions, each checked on every run.</p>
+    <ol class="ready-list">
+      <li>
+        <h3>Every value is believable</h3>
+        <p>Impossible readings are set aside before they can distort an average. A pond sensor reporting 45 mg/L of oxygen is a fault, not a measurement.</p>
+      </li>
+      <li>
+        <h3>Everything is on one clock</h3>
+        <p>Sources that report every minute, every hour, or by hand are lined up on the same time steps, so each row describes one moment.</p>
+      </li>
+      <li>
+        <h3>Units and formats agree</h3>
+        <p>Fahrenheit becomes Celsius and every date format becomes one, through rules written in plain configuration rather than hidden in code.</p>
+      </li>
+      <li>
+        <h3>Missing data stays missing</h3>
+        <p>A 90-minute sensor outage is marked as a gap. Nothing is invented to fill it, so a model never learns from readings that did not happen.</p>
+      </li>
+      <li>
+        <h3>Each use gets what it needs</h3>
+        <p>A dashboard can show the gap, a forecasting model receives only complete rows, and an AI assistant receives the current state of each pond. All three come from the same checked data.</p>
+      </li>
+      <li>
+        <h3>Every change is on record</h3>
+        <p>Each run lists what every source sent, what was held back, and why. When a forecast looks wrong, you can see whether the data were the cause.</p>
+      </li>
+    </ol>
   </section>
 
   <section class="prose wrap" id="problem">
